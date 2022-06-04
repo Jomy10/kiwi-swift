@@ -4,10 +4,12 @@ internal typealias Arr = ContiguousArray
 /// Holds variables for kiwi
 public struct Kiwi {
     /// Initial capicity of all arrays
+    public static var arrayCap: Int = 32
+    public static var printMemoryLayout: Bool = false
     @usableFromInline
-    static var arrayCap: Int = 32
+    internal static var enumCases: [String: Int] = [:]
     @usableFromInline
-    static var printMemoryLayout: Bool = false
+    internal static var caseCounter: Int = 0
 }
 
 /// Holds a pointer to an array.

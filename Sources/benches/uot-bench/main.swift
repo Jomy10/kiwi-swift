@@ -40,7 +40,6 @@ extension Component: ComponentCollection {
 
 print("size:", MemoryLayout<Component>.size, "stride:", MemoryLayout<Component>.stride, "alignment:", MemoryLayout<Component>.alignment)
 
-// TODO: find a better solution than his
 extension Component {
     static let POSITION = 0
     static let VELOCITY = 1

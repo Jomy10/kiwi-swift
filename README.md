@@ -42,7 +42,8 @@ extension Component: ComponentCollection {
 }
 ```
 
-For convenience, you can add static constants to your comonent:
+For convenience, you can add static constants to your comonent.
+I will be referring to these constants in the code examples below a lot
 ```swift
 extension Component {
   static let POSITION = 0
@@ -57,6 +58,16 @@ extension Component: ComponentCollection {
   }
 }
 ```
+
+**NOTE**: There is a default implementation for `id(_ c: Self)`. However,
+this default implementation is much slower compared to adding the switch statement
+manually (uot-bench runs at an average of 7ms using manual implementation, and runs
+at 17ms using default implementation). 
+
+If you want to use the default implementation, you can do: `Component["Position"]`
+instead of `Component.POSITION`.
+
+I would advice setting up **Sourcery** for this (detailed explanation coming later).
 
 ### World
 
@@ -140,7 +151,7 @@ world.edit(entity: id) { components in
 closure. This might change in the future*
 
 
-#### Rading and editing components for multiple entities
+#### Reading and editing components for multiple entities
 
 If you want to edit components for all entities containing a secific component(s), go to
 the [Queries](#queries) chapter.
