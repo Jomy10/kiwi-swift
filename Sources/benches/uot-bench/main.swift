@@ -46,45 +46,46 @@ extension Component {
     static let COLLIDER = 2
 }
 
-@inline(__always)
 func main() {
-    let SIZE = 1000
-    let COLLISION_LIMIT = 0 // 0 or 100
-    
+    let SIZE = 10000
+    let COLLISION_LIMIT: Int32 = 0
     let ITERATIONS = 1000
     
-    let MAX_SPEED: Float64 = 10.0
-    let MAX_POS: Float64 = 100.0
-    let MAX_COLLIDER: Float64 = 1.0
+    let MAX_SPEED = 10.0
+    let MAX_POS = 100.0
+    let MAX_COLLIDER = 1.0
     
     var world: World<Component, Int8, Int8> = World()
-
+    
     for _ in 0..<SIZE {
-        let ent = world.createEntity()
-        world.setComponent(entity: ent, .Position(Vec2(MAX_POS * Float64.random(in: 0.0..<1.0), MAX_POS * Float64.random(in: 0.0..<1.0))))
-        world.setComponent(entity: ent, .Velocity(Vec2(MAX_SPEED * Float64.random(in: 0.0..<1.0), MAX_SPEED * Float64.random(in: 0.0..<1.0))))
-        world.setComponent(entity: ent, .Collider(
-            radius: MAX_COLLIDER * Float64.random(in: 0.0..<1.0),
-            count: 0
-        ))
+        world.createEntity(with: [
+            .Position(Vec2(MAX_POS * Float64.random(in: 0.0..<1.0), MAX_POS * Float64.random(in: 0.0..<1.0))),
+            .Velocity(Vec2(MAX_SPEED * Float64.random(in: 0.0..<1.0), MAX_SPEED * Float64.random(in: 0.0..<1.0))),
+            .Collider(
+                radius: MAX_COLLIDER * Float64.random(in: 0.0..<1.0),
+                count: 0
+            )
+        ])
     }
+    
+    var loopCounter = 0
+    let fixedTime = 0.015
     
     var start = Date()
     var dt = start.timeIntervalSinceNow
-    let fixedTime = 0.015
-    for _ in 0..<ITERATIONS {
+    
+    for iterCount in 0..<ITERATIONS {
         start = Date()
         
-        // update positions
-        world.query([Component.POSITION, Component.VELOCITY]) { (_, comps) in
+        // move circles
+        world.unsafeReadQuery([Component.POSITION, Component.VELOCITY]) { (id, comps) in
+            guard case .Position(var pos) = comps.get(Component.POSITION) else { fatalError() }
+            guard case .Velocity(var vel) = comps.get(Component.VELOCITY) else { fatalError() }
             
-            guard case .Velocity(var vel) = comps[comps.startIndex + Component.VELOCITY] else { fatalError("Found unexpected enum type for velocity") }
-            guard case .Position(var pos) = comps[comps.startIndex] else { fatalError("Found unexpected enum type for position") }
-            
-            pos.x += vel.x * fixedTime
+            pos.x += vel.y * fixedTime
             pos.y += vel.y * fixedTime
             
-            // Bump into the bounding rect
+            // update positions
             if pos.x <= 0 || pos.x >= MAX_POS {
                 vel.x = -vel.x
             }
@@ -92,81 +93,66 @@ func main() {
                 vel.y = -vel.y
             }
             
-            comps[comps.startIndex + Component.VELOCITY] = .Velocity(vel)
-            comps[comps.startIndex] = .Position(pos)
+            loopCounter += 1
+            
+            world.setComponent(entity: id, .Position(pos))
+            world.setComponent(entity: id, .Velocity(vel))
         }
         
-        // Check collisions, increent the count if a collision happens
+        // Check collisions
         var deathCount = 0
-        var targets = world.query([Component.POSITION, Component.COLLIDER])
+        let innerQueryIds = world.query([Component.POSITION, Component.COLLIDER])
         var targetPositions: Arr<Component> = []
         var targetColliders: Arr<Component> = []
         
-        for target in targets {
+        for target in innerQueryIds {
             targetPositions.append(world.unsafeRead(entity: target, component: Component.POSITION))
             targetColliders.append(world.unsafeRead(entity: target, component: Component.COLLIDER))
         }
-        
-        // POINTER VERSION
-        world.unsafeReadQuery([Component.POSITION, Component.COLLIDER]) { (entity, components) in
-            guard case .Position(let pos) = components.get(Component.POSITION) else { fatalError("Found unexpected enum type for target position") }
-            guard case .Collider(radius: let rad, count: var colliderCount) = components.get(Component.COLLIDER) else { fatalError("Found unexpected enum type for target collider") }
-        /* ARRAY SLICE VERSION
-        world.readQuery([Component.POSITION, Component.COLLIDER]) { (entity, components) in
-            guard case .Position(let pos) = components[components.startIndex] else { fatalError("Found unexpected enum type for target position") }
-            guard case .Collider(radius: let rad, count: var colliderCount) = components[components.startIndex + Component.COLLIDER] else { fatalError("Found unexpected enum type for target collider") }
-         */
-            
-            for (idx, target) in targets.enumerated() {
-                if target == entity { continue }
 
-                guard case .Position(let targPos) = targetPositions[idx] /*world.unsafeReadComponent(entity: target, Component.POSITION)*/ else { fatalError("Found unexpected enum type for target position") }
-                guard case .Collider(radius: let targRad, count: _) = targetColliders[idx] /*world.unsafeReadComponent(entity: target, Component.COLLIDER)*/ else { fatalError("Found unexpected enum type for target collider") }
+        world.unsafeReadQuery([Component.POSITION, Component.COLLIDER]) { (id, comps) in
+            guard case .Position(let pos) = comps.get(Component.POSITION) else { fatalError() }
+            guard case .Collider(let colRadius, var colCount) = comps.get(Component.COLLIDER) else { fatalError() }
+            
+            // world.unsafeReadForEach(entities: innerQueryIds) { (targetId, targetComps) in
+            for (idx, targetId) in innerQueryIds.enumerated() {
+                if targetId == id { break }
                 
+                // guard case .Position(let targPos) = comps.get(Component.POSITION) else { fatalError() }
+                // guard case .Collider(let targColRadius, _) = comps.get(Component.COLLIDER) else { fatalError() }
+                
+                guard case .Position(let targPos) = targetPositions[idx] else { fatalError("Found unexpected enum type for target position") }
+                guard case .Collider(let targColRadius, _) = targetColliders[idx] else { fatalError("Found unexpected enum type for target collider") }
+
                 let dx = pos.x - targPos.x
                 let dy = pos.y - targPos.y
                 let distSq = (dx * dx) + (dy * dy)
                 
-                let dr = rad + targRad
+                let dr = colRadius + targColRadius
                 let drSq = dr * dr
                 
                 if drSq > distSq {
-                    colliderCount += 1
-                    world.setComponent(entity: target, .Collider(radius: rad, count: colliderCount))
-                    targetColliders[idx] = .Collider(radius: rad, count: colliderCount)
+                    colCount += 1
                 }
                 
-                // Kill and spawn one
-                if COLLISION_LIMIT > 0 && colliderCount > COLLISION_LIMIT {
-                    if world.rmEntity(entity) {
-                        targets.remove(at: idx)
-                        deathCount += 1
-                        break
-                    }
+                if COLLISION_LIMIT > 0 && colCount > COLLISION_LIMIT {
+                    deathCount += 1
                 }
+                
+                world.setComponent(entity: id, .Collider(radius: colRadius, count: colCount))
+                
+                loopCounter += 1
             }
-        } // end entity query
-        
-        // Spawn new entities, one per each entity we deleted
-        for _ in 0..<deathCount {
-            world.createEntity(with: [
-                .Position(Vec2(
-                    MAX_POS * Float64.random(in: 0.0..<1.0),
-                    MAX_POS * Float64.random(in: 0.0..<1.0)
-                )),
-                .Velocity(Vec2(
-                    MAX_SPEED * Float64.random(in: 0.0..<1.0),
-                    MAX_SPEED * Float64.random(in: 0.0..<1.0)
-                )),
-                .Collider(
-                    radius: MAX_COLLIDER * Float64.random(in: 0.0..<1.0),
-                    count: 0
-                )
-            ])
-        } // endfor spawn per deathcount
+        }
         
         dt = start.timeIntervalSinceNow
-        print(dt * -1000)
+        print(iterCount, dt * -1000, loopCounter)
+        loopCounter = 0
+    } // end iterations
+    
+    world.unsafeReadQuery([Component.COLLIDER]) { (id, comps) in
+        guard case .Collider(_, let count) = comps.get(Component.COLLIDER) else { fatalError() }
+        print(id, count)
     }
 }
 

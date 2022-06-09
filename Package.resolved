@@ -2,6 +2,15 @@
   "object": {
     "pins": [
       {
+        "package": "Raylib",
+        "repositoryURL": "https://github.com/STREGAsGate/Raylib.git",
+        "state": {
+          "branch": "master",
+          "revision": "87da4bfba7a283c83c128186bd5d4b21beb38653",
+          "version": null
+        }
+      },
+      {
         "package": "swift-argument-parser",
         "repositoryURL": "https://github.com/apple/swift-argument-parser",
         "state": {

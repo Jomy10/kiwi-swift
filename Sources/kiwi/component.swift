@@ -4,9 +4,9 @@ public protocol ComponentCollection {
     @inlinable
     static var count: Int { get }
     
-    /// Returns the id of component`c`
+    /// Returns the id of component `c`
     ///
-    /// Overriding the standard implementation might give a performance boost
+    /// Overriding the standard implementation will give a serious performance boost
     ///
     /// **Example implementation**
     /// ```swift

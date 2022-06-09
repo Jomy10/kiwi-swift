@@ -12,7 +12,8 @@ let package = Package(
             targets: ["kiwi"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/google/swift-benchmark", from: "0.1.2")
+        .package(url: "https://github.com/google/swift-benchmark", from: "0.1.2"),
+        .package(url: "https://github.com/STREGAsGate/Raylib.git", .branch("master")),
     ],
     targets: [
         .target(
@@ -20,6 +21,7 @@ let package = Package(
             dependencies: []
         ),
         
+        // Benches //
         .executableTarget(
             name: "performance-benches",
             dependencies: [
@@ -38,6 +40,15 @@ let package = Package(
             dependencies: ["kiwi"],
             path: "Sources/benches/uot-bench-big"
         ),
+        
+        // Demos //
+        .executableTarget(
+            name: "pong-demo",
+            dependencies: ["kiwi", "Raylib"],
+            path: "Sources/demos/pong"
+        ),
+        
+        // Tests //
         .testTarget(
             name: "kiwiTests",
             dependencies: ["kiwi"]

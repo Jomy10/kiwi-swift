@@ -72,6 +72,7 @@ extension World {
     // ==================
     
     /// Check if an entity has a component
+    @inlinable
     public func hasComponent(entity entityId: Entity, _ componentId: Int) -> Bool {
         self.entities.mask[entityId] & (1 << componentId) != 0
     }
@@ -79,6 +80,7 @@ extension World {
     /// Read a component for an entity
     ///
     /// - Returns: none if the entity does not have the component, some otherwise
+    @inlinable
     public func read(entity entityId: Entity, component componentId: Int) -> ComponentType? {
         if self.hasComponent(entity: entityId, componentId) {
             return self.components.data[entityId * self.components.count + componentId]
@@ -91,6 +93,7 @@ extension World {
     ///
     /// - Safety:
     ///     - Unsafely unwraps the component for the entity, without checking wheter it has the component
+    @inlinable
     public func unsafeRead(entity entityId: Entity, component componentId: Int) -> ComponentType {
         self.components.data[entityId * self.components.count + componentId].unsafelyUnwrapped
     }
@@ -98,23 +101,34 @@ extension World {
     /// Read an entity's components
     ///
     /// - Returns: the callback's return value
-    private func read(entity eId: Entity, _ cb: (Entity, ArraySlice<ComponentType?>) -> Bool) -> Bool {
+    @usableFromInline
+    internal func read(entity eId: Entity, _ cb: (Entity, ArraySlice<ComponentType?>) -> Bool) -> Bool {
         let range: Range<Int> = eId * self.components.count..<eId * self.components.count + self.components.count
         let slice: ArraySlice<ComponentType?> = self.components.data[range]
         return cb(eId, slice)
     }
     
     /// Read an entity's components
+    @inlinable
     public func read(entity eId: Entity, _ cb: (Entity, ArraySlice<ComponentType?>) -> ()) {
         let range: Range<Int> = eId * self.components.count..<eId * self.components.count + self.components.count
         let slice: ArraySlice<ComponentType?> = self.components.data[range]
         cb(eId, slice)
     }
     
+    /// Read all components of an entity
+    @inlinable
+    public func unsafeReadAll(entity eId: Entity, _ cb: (UnsafePointerArraySlice<ComponentType?>) -> ()) {
+        self.components.data.withUnsafeBufferPointer { buf in
+            cb(UnsafePointerArraySlice(buf, start: eId * self.components.count))
+        }
+    }
+    
     /// Call a function with each entity and its `componentId` component
     ///
     /// - Safety:
     ///     - Unsafely unwraps the component, so make sure the component always is a valid component ID
+    @inlinable
     public func unsafeReadForEach<E: RandomAccessCollection>(entities: E, onComponent componentId: Int, _ cb: (Entity, ComponentType) -> ()) where E.Element == Entity {
         self.components.data.withUnsafeBufferPointer { buf in
             for eId in entities {
@@ -132,6 +146,7 @@ extension World {
 
     // TODO: wrap ArraySlice in a struct so user can call slice[0] instead of slice[slice.startIndex + 0]
     /// Call a function with each component of an entity
+    @inlinable
     public func readForEach<E: RandomAccessCollection>(entities: E, _ cb: (Entity, ArraySlice<ComponentType?>) -> ()) where E.Element == Entity {
         for eId in entities {
             cb(
@@ -147,6 +162,7 @@ extension World {
     ///
     /// - Safety:
     ///     - As long as the `UnsafePointerArraySlice<ComponentType?>` is not used outside of the closure, using this function will not cause undefined behaviour
+    @inlinable
     public func unsafeReadForEach<E: RandomAccessCollection>(entities: E, _ cb: (Entity, UnsafePointerArraySlice<ComponentType?>) -> ()) where E.Element == Entity {
         self.components.data.withUnsafeBufferPointer { buf in
             for eId in entities {
@@ -220,6 +236,7 @@ extension World {
     
     // TODO: wrap ArraySlice in a struct so user can call slice[0] instead of slice[slice.startIndex + 0]
     /// Edit all components of an entity using a callback
+    @inlinable
     public mutating func forEach<E: RandomAccessCollection>(entities: E, _ cb: (Entity, inout ArraySlice<ComponentType?>) -> ()) where E.Element == Entity {
         for eId in entities {
             let range: Range<Int> = eId * self.components.count..<eId * self.components.count + self.components.count
@@ -250,6 +267,7 @@ extension World {
     // =======
     
     /// Queries all entities that contain all of the given components and returns those entities
+    @inlinable
     public func query<Q: RandomAccessCollection>(_ query: Q) -> ContiguousArray<Entity>  where Q.Element == Int {
         // Build the query
         // e.g. component ids 0 and 2: 0101
@@ -259,7 +277,7 @@ extension World {
         }
         
         var result: Arr<Int> = []
-        for (i, eMask) in self.entities.mask.enumerated() {
+        for (i, eMask) in self.entities.mask.enumerated() { // TODO: if not alive skip? Definitely needs to be present in the `not` queries
             // 0111  0101  0001
             // 0101  0101  0101
             // true  true  false
@@ -276,6 +294,7 @@ extension World {
     /// - Parameters:
     ///    - query: An array of components the entity should have
     //     - cd: a callback that is called with an array slice of an entity's components
+    @inlinable
     public mutating func query<Q: RandomAccessCollection>(_ query: Q, _ cb: (Entity, inout ArraySlice<ComponentType?>) -> ()) where Q.Element == Int {
         self.forEach(entities: self.query(query), cb)
     }
@@ -297,10 +316,13 @@ extension World {
     }
     
     /// A query that does not returnn an inout parameter to the closure
+    @inlinable
+
     public func readQuery<Q: RandomAccessCollection>(_ query: Q, _ cb: (Entity, ArraySlice<ComponentType?>) -> ()) where Q.Element == Int {
         self.readForEach(entities: self.query(query), cb)
     }
     
+    @inlinable
     public func unsafeReadQuery<Q: RandomAccessCollection>(_ query: Q, _ cb: (Entity, UnsafePointerArraySlice<ComponentType?>) -> ()) where Q.Element == Int {
         self.unsafeReadForEach(entities: self.query(query), cb)
     }

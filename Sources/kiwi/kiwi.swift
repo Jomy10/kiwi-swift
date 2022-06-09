@@ -16,14 +16,17 @@ public struct Kiwi {
 ///
 /// Use the `get` method to get the element of the array at the specified index
 public struct UnsafePointerArraySlice<T> {
-    private let ptr: UnsafeBufferPointer<T>
-    private let start: Int
+    @usableFromInline
+    let ptr: UnsafeBufferPointer<T>
+    @usableFromInline
+    let start: Int
     
-    @inline(__always)
+    @inlinable
     public func get(_ i: Int) -> T {
         return self.ptr[self.start + i]
     }
     
+    @inlinable
     init(_ ptr: UnsafeBufferPointer<T>, start: Int) {
         self.ptr = ptr
         self.start = start

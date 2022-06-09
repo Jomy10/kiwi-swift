@@ -2,9 +2,15 @@
   <img src="logo.png" alt="kiwi ecs">
 </p>
 
-A performant, zero-dependency ECS library written in pure swift.
+<p align="center">
+  A performant, zero-dependency ECS library written in pure swift.
+</p>
 
 ## Usage
+
+```swift
+.package(url: "https://github.com/Jomy10/kiwi", .branch("master"))
+```
 
 **NOTE**: This library is still very new, and I'm working on getting the api to be nicer 
 to work with.
@@ -42,7 +48,7 @@ extension Component: ComponentCollection {
 }
 ```
 
-For convenience, you can add static constants to your comonent.
+For convenience, you can add static constants to your component enum.
 I will be referring to these constants in the code examples below a lot
 ```swift
 extension Component {
@@ -181,7 +187,7 @@ world.forEach(entities: [0, 1, 3]) { (entityId, components) in
 
 ```swift
 // Query all entities with a position AND velocity
-let entityIds = world.query([Componts.POSITION, Components.VELOCITY])
+let entityIds = world.query([Components.POSITION, Components.VELOCITY])
 // Query all entities with a position (more performant to use CollectionOfOne)
 let entityIds = world.query(CollectionOfOne(Components.POSITION))
 // These `entityIds` can be used in the aforementioned methods, or:
@@ -225,7 +231,7 @@ world.query(not: CollectionOfOne(Components.NAME)) { (entityId, components) in
 // Also available as `world.query(not: ...)` and `world.readQuery(not: ..., _: cb)`
 ```
 
-## Memory considerations
+## Memory & performance considerations
 
 In this section, I will discuss some more advanced concepts. So feel free to skip this.
 This will definitely not be a necessary read for small game projects.
@@ -237,11 +243,22 @@ The important parameter is the stride. For more information, see [Size, Stride, 
 Setting the second (and third) type parameter of your World to an integer with less bits
 will increase performance.
 
+For more on performance, see [Sources/benches/performance-benches](Sources/benches/performance-benches).
+You can run them with:
+```sh
+./bench.sh [benchmark]
+```
+
+See [bench.sh](bench.sh) for possible `benchmark` values (e.g. `mutQuery`)
+
 ## Note on looping
 
 Doing a query inside of another query callback is very slow. The best solution I have right
 now can be found in [Source/benches/uot-bench/main.swift](https://github.com/jomy10/kiwi/blob/master/Sources/benches/uot-bench/main.swift#L101-L109), 
 line 101-109 shows collecting a query before using it inside of a loop (antoher query).
+
+Also, see above chapter about performance. There is a `mutQuery` benchmark that might be
+of interest.
 
 ## Stability and semver
 
