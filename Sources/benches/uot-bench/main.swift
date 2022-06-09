@@ -38,7 +38,7 @@ extension Component: ComponentCollection {
     }
 }
 
-print("size:", MemoryLayout<Component>.size, "stride:", MemoryLayout<Component>.stride, "alignment:", MemoryLayout<Component>.alignment)
+// print("size:", MemoryLayout<Component>.size, "stride:", MemoryLayout<Component>.stride, "alignment:", MemoryLayout<Component>.alignment)
 
 extension Component {
     static let POSITION = 0
@@ -47,7 +47,7 @@ extension Component {
 }
 
 func main() {
-    let SIZE = 10000
+    let SIZE = 1000
     let COLLISION_LIMIT: Int32 = 0
     let ITERATIONS = 1000
     
@@ -78,9 +78,9 @@ func main() {
         start = Date()
         
         // move circles
-        world.unsafeReadQuery([Component.POSITION, Component.VELOCITY]) { (id, comps) in
-            guard case .Position(var pos) = comps.get(Component.POSITION) else { fatalError() }
-            guard case .Velocity(var vel) = comps.get(Component.VELOCITY) else { fatalError() }
+        world.query([Component.POSITION, Component.VELOCITY]) { (id, comps) in
+            guard case .Position(var pos) = comps[Component.POSITION] else { fatalError() }
+            guard case .Velocity(var vel) = comps[Component.VELOCITY] else { fatalError() }
             
             pos.x += vel.y * fixedTime
             pos.y += vel.y * fixedTime
@@ -110,13 +110,13 @@ func main() {
             targetColliders.append(world.unsafeRead(entity: target, component: Component.COLLIDER))
         }
 
-        world.unsafeReadQuery([Component.POSITION, Component.COLLIDER]) { (id, comps) in
-            guard case .Position(let pos) = comps.get(Component.POSITION) else { fatalError() }
-            guard case .Collider(let colRadius, var colCount) = comps.get(Component.COLLIDER) else { fatalError() }
+        world.query([Component.POSITION, Component.COLLIDER]) { (id, comps) in
+            guard case .Position(let pos) = comps[Component.POSITION] else { fatalError() }
+            guard case .Collider(let colRadius, var colCount) = comps[Component.COLLIDER] else { fatalError() }
             
             // world.unsafeReadForEach(entities: innerQueryIds) { (targetId, targetComps) in
             for (idx, targetId) in innerQueryIds.enumerated() {
-                if targetId == id { break }
+                if targetId == id { continue }
                 
                 // guard case .Position(let targPos) = comps.get(Component.POSITION) else { fatalError() }
                 // guard case .Collider(let targColRadius, _) = comps.get(Component.COLLIDER) else { fatalError() }
@@ -150,10 +150,12 @@ func main() {
         loopCounter = 0
     } // end iterations
     
-    world.unsafeReadQuery([Component.COLLIDER]) { (id, comps) in
-        guard case .Collider(_, let count) = comps.get(Component.COLLIDER) else { fatalError() }
+    /*
+    world.query([Component.COLLIDER]) { (id, comps) in
+        guard case .Collider(_, let count) = comps[Component.COLLIDER] else { fatalError() }
         print(id, count)
     }
+    */
 }
 
 main()

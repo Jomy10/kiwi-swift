@@ -201,11 +201,11 @@ final class kiwiTests: XCTestCase {
         world.setComponent(entity: e1, .Position(10, 5))
         world.setComponent(entity: e2, .Name("Hello world"))
         
-        world.forEach(entities: [e1]) { (_, comps) in
-            if case .Position(var x, var y) = comps[comps.startIndex+0] {
+        world.readForEach(entities: [e1]) { (id, comps) in
+            if case .Position(var x, var y) = comps[0] {
                 x = 2
                 y = 2
-                comps[comps.startIndex + 0] = .Position(x, y)
+                world.setComponent(entity: id, .Position(x, y))
             } else {
                 exit(1)
             }
@@ -232,11 +232,11 @@ final class kiwiTests: XCTestCase {
         world.setComponent(entity: e2, .Name("Hello world"))
         world.setComponent(entity: e3, .Name("Hello component 3"))
         
-        world.query(CollectionOfOne(0)) { (_, slice) in
-            if case .Position(var x, var y) = slice[slice.startIndex + 0] {
+        world.query(CollectionOfOne(0)) { (id, slice) in
+            if case .Position(var x, var y) = slice[0] {
                 x = 2
                 y = 2
-                slice[slice.startIndex + 0] = .Position(x, y)
+                world.setComponent(entity: id, .Position(x, y))
             } else {
                 exit(1)
             }

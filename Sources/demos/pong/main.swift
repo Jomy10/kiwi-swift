@@ -104,9 +104,9 @@ while !Raylib.windowShouldClose {
     // This is where the systems go
     
     // Player input
-    world.unsafeReadQuery([Component.CONTROLLABLE, Component.VELOCITY]) { (id, components) in
-        guard case .Controllable(let layout) = components.get(Component.CONTROLLABLE) else { fatalError() }
-        guard case .Velocity(var vel) = components.get(Component.VELOCITY) else { fatalError() }
+    world.query([Component.CONTROLLABLE, Component.VELOCITY]) { (id, components) in
+        guard case .Controllable(let layout) = components[Component.CONTROLLABLE] else { fatalError() }
+        guard case .Velocity(var vel) = components[Component.VELOCITY] else { fatalError() }
         
         if Raylib.isKeyDown(layout.up) {
             if vel.y > 0 { vel = Vector2(x: 0, y: 0) }
@@ -124,20 +124,20 @@ while !Raylib.windowShouldClose {
     var gameOver = false
     // Collisions + check gameover
     // Get ball entity and check collisions
-    world.unsafeReadFlagsQuery(CollectionOfOne(1)) { (ballId, components) in
-        guard case .Position(let bpos) = components.get(Component.POSITION) else { fatalError() }
-        guard case .Velocity(var bvel) = components.get(Component.VELOCITY) else { fatalError() }
-        guard case .Bounds(let bbounds) = components.get(Component.BOUNDS)  else { fatalError() }
+    world.readFlagsQuery(CollectionOfOne(1)) { (ballId, components) in
+        guard case .Position(let bpos) = components[Component.POSITION] else { fatalError() }
+        guard case .Velocity(var bvel) = components[Component.VELOCITY] else { fatalError() }
+        guard case .Bounds(let bbounds) = components[Component.BOUNDS]  else { fatalError() }
         
         // check gameover
-        if bpos.x < PADDLE_PADDING || bpos.x > Float(SCREENW) - PADDLE_PADDING {
+        if bpos.x < 0 || bpos.x > Float(SCREENW) {
             gameOver = true
         }
         
-        world.unsafeReadQuery([Component.POSITION, Component.BOUNDS]) { (paddleId, components) in
+        world.query([Component.POSITION, Component.BOUNDS]) { (paddleId, components) in
             if ballId == paddleId { return } // skip if same entity
-            guard case .Position(let ppos) = components.get(Component.POSITION) else { fatalError() }
-            guard case .Bounds(let pbounds) = components.get(Component.BOUNDS)  else { fatalError() }
+            guard case .Position(let ppos) = components[Component.POSITION] else { fatalError() }
+            guard case .Bounds(let pbounds) = components[Component.BOUNDS]  else { fatalError() }
         
             if Raylib.checkCollisionRecs(
                 Rectangle(x: bpos.x, y: bpos.y, width: bbounds.x, height: bbounds.y),
@@ -164,16 +164,16 @@ while !Raylib.windowShouldClose {
     }
     
     // Move entities
-    world.unsafeReadQuery([Component.POSITION, Component.VELOCITY, Component.BOUNDS, Component.SPEED]) { (id, components) in
-        guard case .Position(var pos) = components.get(Component.POSITION) else { fatalError() }
-        guard case .Velocity(let vel) = components.get(Component.VELOCITY) else { fatalError() }
-        guard case .Bounds(let bounds) = components.get(Component.BOUNDS) else { fatalError() }
-        guard case .Speed(let speed) = components.get(Component.SPEED) else { fatalError() }
+    world.query([Component.POSITION, Component.VELOCITY, Component.BOUNDS, Component.SPEED]) { (id, components) in
+        guard case .Position(var pos) = components[Component.POSITION] else { fatalError() }
+        guard case .Velocity(let vel) = components[Component.VELOCITY] else { fatalError() }
+        guard case .Bounds(let bounds) = components[Component.BOUNDS] else { fatalError() }
+        guard case .Speed(let speed) = components[Component.SPEED] else { fatalError() }
         
         let delta = Raylib.getFrameTime()
         
         pos = Vector2(
-            x: min(max(0, pos.x + vel.x * speed * delta), Float(SCREENW) - bounds.x),
+            x: pos.x + vel.x * speed * delta, // min(max(0, pos.x + vel.x * speed * delta), Float(SCREENW) - bounds.x),
             y: min(max(0, pos.y + vel.y * speed * delta), Float(SCREENH) - bounds.y)
         )
         
@@ -187,9 +187,9 @@ while !Raylib.windowShouldClose {
     Raylib.clearBackground(.black)
     
     // Draw objects
-    world.unsafeReadQuery([Component.POSITION, Component.BOUNDS, Component.DRAWABLE]) { (id, components) in
-        guard case .Position(let pos) = components.get(Component.POSITION) else { fatalError() }
-        guard case .Bounds(let bounds) = components.get(Component.BOUNDS) else { fatalError() }
+    world.query([Component.POSITION, Component.BOUNDS, Component.DRAWABLE]) { (id, components) in
+        guard case .Position(let pos) = components[Component.POSITION] else { fatalError() }
+        guard case .Bounds(let bounds) = components[Component.BOUNDS] else { fatalError() }
         
         Raylib.drawRectangleV(pos, bounds, .white)
     }

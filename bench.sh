@@ -10,15 +10,18 @@
 
 case $1 in
   uot)
-    swift run -c release -Xswiftc -whole-module-optimization -Xswiftc -O uot-bench ;;
+    if [ $2 == "report" ]; then
+      swift run -c release -Xswiftc -whole-module-optimization -Xswiftc -O uot-bench > uot-report.txt
+      sed 's/\ /,/g' uot-report.txt > uot-report.csv
+    else
+      swift run -c release -Xswiftc -whole-module-optimization -Xswiftc -O uot-bench
+    fi
+    ;;
   uot-big)
+    echo "Note, this test was made for an earlier version of the libray and has NOT been optimized!"
     swift run -c release -Xswiftc -whole-module-optimization -Xswiftc -O uot-bench-big ;;
   mutQuery)
     MUTQUERY=1 swift run -c release -Xswiftc -whole-module-optimization -Xswiftc -O performance-benches ;;
-  doubleQuery)
-    DOUBLEQUERY=1 swift run -c release -Xswiftc -whole-module-optimization -Xswiftc -O performance-benches ;;
-  mutClosure)
-    MUTCLOSURE=1 swift run -c release -Xswiftc -whole-module-optimization -Xswiftc -O performance-benches ;;
   *)
     if [$1 == ""]; then
       echo "no benchmark provided"

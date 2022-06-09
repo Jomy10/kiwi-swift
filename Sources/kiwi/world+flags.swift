@@ -33,7 +33,7 @@ extension World {
     }
     
     @inlinable
-    public func unsafeReadFlagsQuery<Q: RandomAccessCollection>(_ query: Q, _ cb: (Entity, UnsafePointerArraySlice<ComponentType?>) -> ()) where Q.Element == Int {
-        self.unsafeReadForEach(entities: queryFlags(query), cb)
+    public func readFlagsQuery<Q: RandomAccessCollection>(_ query: Q, _ cb: (Entity, UnsafePointerArraySlice<ComponentType?>) -> ()) where Q.Element == Int {
+        self.readForEach(entities: queryFlags(query), cb)
     }
 }

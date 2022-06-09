@@ -21,14 +21,32 @@ public struct UnsafePointerArraySlice<T> {
     @usableFromInline
     let start: Int
     
+    @available(*, deprecated, message: "Use subscript instead")
     @inlinable
     public func get(_ i: Int) -> T {
         return self.ptr[self.start + i]
     }
     
+    @inlinable 
+    public subscript(_ i: Int) -> T {
+        return self.ptr[self.start + i]
+    }
+    
     @inlinable
-    init(_ ptr: UnsafeBufferPointer<T>, start: Int) {
+    internal init(_ ptr: UnsafeBufferPointer<T>, start: Int) {
         self.ptr = ptr
         self.start = start
     }
 }
+
+//===================//
+// methods for tests //
+//===================//
+
+#if DEBUG
+internal extension World {
+    func getComponents() -> ComponentStore<ComponentType> { self.components }
+    func getEntities() -> EntityStore<EntityDataType, FlagType> { self.entities }
+    func getEntityPool() -> Arr<Entity> { self.entityPool }
+}
+#endif

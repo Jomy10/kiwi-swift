@@ -106,10 +106,10 @@ func main() {
         start = Date()
         
         // update positions
-        world.query([Component.POSITION, Component.VELOCITY]) { (_, comps) in
+        world.query([Component.POSITION, Component.VELOCITY]) { (id, comps) in
             
-            guard case .Velocity(var vel) = comps[comps.startIndex + Component.VELOCITY] else { fatalError("Found unexpected enum type for velocity") }
-            guard case .Position(var pos) = comps[comps.startIndex] else { fatalError("Found unexpected enum type for position") }
+            guard case .Velocity(var vel) = comps[Component.VELOCITY] else { fatalError("Found unexpected enum type for velocity") }
+            guard case .Position(var pos) = comps[Component.POSITION] else { fatalError("Found unexpected enum type for position") }
             
             pos.x += vel.x * fixedTime
             pos.y += vel.y * fixedTime
@@ -122,8 +122,8 @@ func main() {
                 vel.y = -vel.y
             }
             
-            comps[comps.startIndex + Component.VELOCITY] = .Velocity(vel)
-            comps[comps.startIndex] = .Position(pos)
+            world.setComponent(entity: id, .Velocity(vel))
+            world.setComponent(entity: id, .Position(pos))
         }
         
         // Check collisions, increent the count if a collision happens
@@ -137,10 +137,9 @@ func main() {
             targetColliders.append(world.unsafeRead(entity: target, component: Component.COLLIDER))
         }
         
-        // POINTER VERSION
-        world.unsafeReadQuery([Component.POSITION, Component.COLLIDER]) { (entity, components) in
-            guard case .Position(let pos) = components.get(Component.POSITION) else { fatalError("Found unexpected enum type for target position") }
-            guard case .Collider(radius: let rad, count: var colliderCount) = components.get(Component.COLLIDER) else { fatalError("Found unexpected enum type for target collider") }
+        world.query([Component.POSITION, Component.COLLIDER]) { (entity, components) in
+            guard case .Position(let pos) = components[Component.POSITION] else { fatalError("Found unexpected enum type for target position") }
+            guard case .Collider(radius: let rad, count: var colliderCount) = components[Component.COLLIDER] else { fatalError("Found unexpected enum type for target collider") }
             
             for (idx, target) in targets.enumerated() {
                 if target == entity { continue }
