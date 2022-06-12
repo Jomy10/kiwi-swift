@@ -16,7 +16,7 @@ extension World {
     }
     
     @inlinable
-    public func queryFlags<Q: RandomAccessCollection>(_ query: Q) -> ContiguousArray<Entity> where Q.Element == Int {
+    public func queryFlags<Q: RandomAccessCollection>(_ query: Q) -> ContiguousArray<Entity> where Q.Element == FlagType {
         var _query: FlagType = 0
         for c in query {
             _query |= (1 << c)
@@ -33,7 +33,8 @@ extension World {
     }
     
     @inlinable
-    public func readFlagsQuery<Q: RandomAccessCollection>(_ query: Q, _ cb: (Entity, UnsafePointerArraySlice<ComponentType?>) -> ()) where Q.Element == Int {
+
+    public func readFlagsQuery<Q: RandomAccessCollection>(_ query: Q, _ cb: (Entity, UnsafePointerArraySlice<ComponentType?>) -> ()) where Q.Element == FlagType {
         self.readForEach(entities: queryFlags(query), cb)
     }
 }
