@@ -1,3 +1,5 @@
+## A new and improved version can be found at [github.com/jomy10/kiwi-ecs-swift](https://github.com/jomy10/kiwi-ecs-swift)!!
+
 <p align="center">
   <img src="logo.png" alt="kiwi ecs">
 </p>
